@@ -28,9 +28,15 @@ PAIR_COLORS = [[255,     0,    85],
 def vis_pose(img, joints):
     to_show = img.copy()
     for body in joints:
-        joint = np.asarray(body['joints'], dtype=np.int)
+        joint = np.asarray(body['joints'], dtype=np.float64)
+        joint[:, 0] *= img.shape[1]/656.0
+        joint[:, 1] *= img.shape[0]/368.0
+        joint = joint.astype(np.int)
         for i, pair in enumerate(PART_PAIRS):
-            cv2.line(to_show, tuple(joint[pair[0]][:2]), tuple(joint[pair[1]][:2]), color=PAIR_COLORS[i][::-1], thickness=3)
+            pt1 = joint[pair[0]][:2]
+            pt2 = joint[pair[1]][:2]
+            if np.sum(np.abs(pt1)) > 10 and np.sum(np.abs(pt2)) > 10:
+                cv2.line(to_show, tuple(pt1), tuple(pt2), color=PAIR_COLORS[i][::-1], thickness=3)
     return to_show
 
 def demo_pose(vid_path, pose_dir):
@@ -46,9 +52,11 @@ def demo_pose(vid_path, pose_dir):
 
         to_show = vis_pose(frame, pose['bodies'])
         cv2.imshow('img', to_show)
-        cv2.waitKey(30)
+        cv2.waitKey(60)
         frame_ind += 1
     return 0
 
 if __name__ == '__main__':
-    demo_pose('data/video/M_00001.avi', 'data/pose/001/M_00001')
+    demo_pose('data/video/001/M_00001.avi', 'data/pose/001/M_00001')
+    demo_pose('data/video/002/M_00208.avi', 'data/pose/002/M_00208')
+
